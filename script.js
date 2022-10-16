@@ -5,6 +5,8 @@ window.addEventListener('load', () => {
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
   const btn = document.getElementById('warpbutton')
+  const img = document.getElementById('image')
+
   class Particle {
     constructor(x, y, effect, color) {
       this.ox = Math.floor(x)
@@ -16,13 +18,13 @@ window.addEventListener('load', () => {
       this.vx = 0
       this.vy = 0
       this.color = color
-      this.ease = 0.1
+      this.ease = 0.2
       this.dx = 0
       this.dy = 0
       this.dist = 0
       this.force = 0
       this.angle = 0
-      this.friction = 0.95
+      this.friction = 0.8
     }
     draw(ctx) {
       ctx.fillStyle = this.color
@@ -49,18 +51,18 @@ window.addEventListener('load', () => {
   }
 
   class Effect {
-    constructor(width, height) {
+    constructor(width, height, img) {
       this.width = width
       this.height = height
       this.particles = []
-      this.image = document.getElementById('image')
+      this.image = img
       this.center = {
         x: this.width / 2 - this.image.width / 2,
         y: this.height / 2 - this.image.height / 2,
       }
-      this.gap = 2
+      this.gap = 4
       this.mouse = {
-        radius: 3000,
+        radius: 2000,
         x: undefined,
         y: undefined,
       }
@@ -96,16 +98,30 @@ window.addEventListener('load', () => {
       this.particles.forEach(particle => particle.warp())
     }
   }
-  const eff = new Effect(canvas.width, canvas.height)
-  eff.init(ctx)
-  const animate = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    eff.draw(ctx)
-    eff.update()
-    requestAnimationFrame(animate)
-  }
-  animate()
-  btn.addEventListener('click', () => {
-    eff.warp()
-  })
+
+  fetch('/dragon.jpeg')
+    .then(res => res.blob())
+    .then(blob => {
+      // turn blob to base 64
+      const reader = new FileReader()
+      reader.readAsDataURL(blob)
+      reader.onload = () => {
+        img.src = reader.result
+        img.scale = 0.5
+        img.onload = () => {
+          const eff = new Effect(canvas.width, canvas.height, img)
+          eff.init(ctx)
+          const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            eff.draw(ctx)
+            eff.update()
+            requestAnimationFrame(animate)
+          }
+          animate()
+          btn.addEventListener('click', () => {
+            eff.warp()
+          })
+        }
+      }
+    })
 })
