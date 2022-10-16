@@ -4,7 +4,7 @@ window.addEventListener('load', () => {
   const ctx = canvas.getContext('2d')
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
-  const btn = document.getElementById('warpbutton')
+  const inp = document.getElementById('imageInput')
   const img = document.getElementById('image')
 
   class Particle {
@@ -14,7 +14,7 @@ window.addEventListener('load', () => {
       this.effect = effect
       this.x = Math.random() * this.effect.width
       this.y = Math.random() * this.effect.height
-      this.size = this.effect.gap
+      this.size = this.effect.gap + 1
       this.vx = 0
       this.vy = 0
       this.color = color
@@ -60,7 +60,7 @@ window.addEventListener('load', () => {
         x: this.width / 2 - this.image.width / 2,
         y: this.height / 2 - this.image.height / 2,
       }
-      this.gap = 4
+      this.gap = 3
       this.mouse = {
         radius: 2000,
         x: undefined,
@@ -97,31 +97,30 @@ window.addEventListener('load', () => {
     warp() {
       this.particles.forEach(particle => particle.warp())
     }
+    reset() {
+      this.particles = []
+    }
   }
-
-  fetch('/dragon.jpeg')
-    .then(res => res.blob())
-    .then(blob => {
-      // turn blob to base 64
-      const reader = new FileReader()
-      reader.readAsDataURL(blob)
-      reader.onload = () => {
-        img.src = reader.result
-        img.scale = 0.5
-        img.onload = () => {
-          const eff = new Effect(canvas.width, canvas.height, img)
-          eff.init(ctx)
-          const animate = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-            eff.draw(ctx)
-            eff.update()
-            requestAnimationFrame(animate)
-          }
-          animate()
-          btn.addEventListener('click', () => {
-            eff.warp()
-          })
+  let eff
+  inp.addEventListener('change', e => {
+    if (eff) eff.reset()
+    const reader = new FileReader()
+    reader.readAsDataURL(e.target.files[0])
+    reader.onload = () => {
+      img.src = reader.result
+      img.style.width > 500 ? (img.style.width = '500px') : null
+      img.style.height > 500 ? (img.style.height = '500px') : null
+      img.onload = () => {
+        eff = new Effect(canvas.width, canvas.height, img)
+        eff.init(ctx)
+        const animate = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          eff.draw(ctx)
+          eff.update()
+          requestAnimationFrame(animate)
         }
+        animate()
       }
-    })
+    }
+  })
 })
